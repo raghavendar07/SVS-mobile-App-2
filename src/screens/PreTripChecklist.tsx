@@ -4,6 +4,7 @@ import { AppBar } from '../components/AppBar';
 import { Button } from '../components/Button';
 import { Pill } from '../components/Pill';
 import { Checklist } from '../components/Checklist';
+import { PhotoCapture } from '../components/PhotoCapture';
 import { useRoute } from '../state/RouteContext';
 import { Phone } from '../components/Icon';
 
@@ -12,7 +13,6 @@ export function PreTripChecklist() {
   const {
     state,
     dispatch,
-    driver,
     checklist,
     inspectionEvaluated,
     inspectionPercent,
@@ -22,7 +22,7 @@ export function PreTripChecklist() {
     hasAnyFail,
     hasPending
   } = useRoute();
-  const nameOk = state.signedName.trim().length >= 3;
+  const photosOk = !!state.photos.driver && !!state.photos.odometerStart;
   const total = checklist.length;
 
   const items = checklist.map(c => ({
@@ -103,15 +103,15 @@ export function PreTripChecklist() {
               }}
             >
               <span className="row gap8">
-                <span
-                  style={{
-                    width: 8,
-                    height: 8,
-                    borderRadius: 2,
-                    background: 'var(--red)'
-                  }}
-                />
-                Tap ✕ for any failed item — add a note + contact admin to proceed.
+                <span style={{ color: 'var(--red)', display: 'inline-flex' }}>
+                  <svg width="12" height="12" viewBox="0 0 24 24">
+                    <path
+                      d="m12 2 2.6 6.6 7 .6-5.3 4.6 1.7 6.9L12 17l-6 3.7 1.7-6.9L2.4 9.2l7-.6L12 2Z"
+                      fill="currentColor"
+                    />
+                  </svg>
+                </span>
+                Items marked with red star are high-priority — fail blocks the route.
               </span>
             </div>
 
@@ -164,56 +164,29 @@ export function PreTripChecklist() {
               </div>
             )}
 
-            <div style={{ marginTop: 14 }}>
-              <span className="label">Enter full name to start ride</span>
-              <div className="fld-wrap" style={{ marginTop: 8 }}>
-                <span className="ic">
-                  <svg width="19" height="19" viewBox="0 0 24 24" fill="none">
-                    <circle cx="12" cy="8" r="3.4" stroke="currentColor" strokeWidth="1.8" />
-                    <path
-                      d="M5 20a7 7 0 0 1 14 0"
-                      stroke="currentColor"
-                      strokeWidth="1.8"
-                      strokeLinecap="round"
-                    />
-                  </svg>
-                </span>
-                <input
-                  className="fld"
-                  type="text"
-                  autoCapitalize="words"
-                  autoComplete="name"
-                  placeholder={driver.name}
-                  value={state.signedName}
-                  onChange={e => dispatch({ type: 'setSignedName', name: e.target.value })}
+            <div style={{ marginTop: 16 }}>
+              <span className="label">Verification photos</span>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginTop: 8 }}>
+                <PhotoCapture
+                  label="Driver photo"
+                  hint="Selfie at the wheel before starting."
+                  variant="driver"
+                  captureMode="user"
+                  required
+                  photo={state.photos.driver}
+                  onCapture={dataUrl => dispatch({ type: 'setPhoto', kind: 'driver', dataUrl })}
+                  onClear={() => dispatch({ type: 'clearPhoto', kind: 'driver' })}
                 />
-                {nameOk && (
-                  <span
-                    style={{
-                      position: 'absolute',
-                      right: 14,
-                      top: '50%',
-                      transform: 'translateY(-50%)',
-                      width: 22,
-                      height: 22,
-                      borderRadius: '50%',
-                      background: 'var(--green)',
-                      display: 'grid',
-                      placeItems: 'center'
-                    }}
-                  >
-                    <svg width="13" height="13" viewBox="0 0 24 24">
-                      <path
-                        d="m5 13 4 4L19 7"
-                        stroke="#fff"
-                        strokeWidth="3.2"
-                        fill="none"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
-                    </svg>
-                  </span>
-                )}
+                <PhotoCapture
+                  label="Odometer · start of ride"
+                  hint="Clear shot of the dashboard reading."
+                  required
+                  photo={state.photos.odometerStart}
+                  onCapture={dataUrl =>
+                    dispatch({ type: 'setPhoto', kind: 'odometerStart', dataUrl })
+                  }
+                  onClear={() => dispatch({ type: 'clearPhoto', kind: 'odometerStart' })}
+                />
               </div>
               <div
                 style={{
@@ -224,8 +197,7 @@ export function PreTripChecklist() {
                   lineHeight: 1.4
                 }}
               >
-                By typing your full name you confirm the inspection is accurate and
-                accept liability for the pre-trip check.
+                Both photos are required. Logged with timestamps and shift ID.
               </div>
             </div>
 
@@ -233,22 +205,22 @@ export function PreTripChecklist() {
               <Button
                 variant="red"
                 style={{ marginTop: 16, marginBottom: 4 }}
-                disabled={missingNoteCount > 0 || !nameOk}
+                disabled={missingNoteCount > 0 || !photosOk}
                 onClick={contactAdmin}
               >
                 <Phone size={18} stroke="#fff" />
-                {!nameOk ? 'Enter your name to continue' : 'Contact admin for approval'}
+                {!photosOk ? 'Capture both photos to continue' : 'Contact admin for approval'}
               </Button>
             ) : (
               <Button
                 style={{ marginTop: 16, marginBottom: 4 }}
-                disabled={hasPending || !nameOk}
+                disabled={hasPending || !photosOk}
                 onClick={proceedAllPass}
               >
                 {hasPending
                   ? `Review all ${total} items`
-                  : !nameOk
-                  ? 'Enter your name to start ride'
+                  : !photosOk
+                  ? 'Capture driver + odometer to start'
                   : 'Start ride'}
               </Button>
             )}

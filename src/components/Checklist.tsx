@@ -93,17 +93,20 @@ export function Checklist({
               {item.label}
               {item.critical && (
                 <span
+                  aria-label="Critical item"
+                  title="Critical item"
                   style={{
-                    fontSize: 9.5,
-                    fontWeight: 800,
-                    letterSpacing: '.06em',
                     color: 'var(--red)',
-                    background: 'var(--red-50)',
-                    padding: '2px 6px',
-                    borderRadius: 6
+                    display: 'inline-flex',
+                    alignItems: 'center'
                   }}
                 >
-                  CRITICAL
+                  <svg width="14" height="14" viewBox="0 0 24 24">
+                    <path
+                      d="m12 2 2.6 6.6 7 .6-5.3 4.6 1.7 6.9L12 17l-6 3.7 1.7-6.9L2.4 9.2l7-.6L12 2Z"
+                      fill="currentColor"
+                    />
+                  </svg>
                 </span>
               )}
             </span>

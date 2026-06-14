@@ -315,7 +315,7 @@ export function AwaitingApproval() {
                   fontWeight: 600
                 }}
               >
-                Severity: {blockedByCritical ? 'CRITICAL' : 'STANDARD'} · {failedItems.length} item
+                Severity: {blockedByCritical ? 'High priority' : 'Standard'} · {failedItems.length} item
                 {failedItems.length > 1 ? 's' : ''} flagged
               </div>
             </div>
@@ -355,18 +355,20 @@ export function AwaitingApproval() {
                         {it.label}
                         {it.critical && (
                           <span
+                            aria-label="Critical item"
                             style={{
-                              marginLeft: 6,
-                              fontSize: 9,
-                              fontWeight: 800,
-                              letterSpacing: '.06em',
+                              marginLeft: 5,
                               color: 'var(--red)',
-                              background: 'var(--red-50)',
-                              padding: '2px 5px',
-                              borderRadius: 5
+                              display: 'inline-flex',
+                              verticalAlign: 'middle'
                             }}
                           >
-                            CRITICAL
+                            <svg width="13" height="13" viewBox="0 0 24 24">
+                              <path
+                                d="m12 2 2.6 6.6 7 .6-5.3 4.6 1.7 6.9L12 17l-6 3.7 1.7-6.9L2.4 9.2l7-.6L12 2Z"
+                                fill="currentColor"
+                              />
+                            </svg>
                           </span>
                         )}
                       </span>

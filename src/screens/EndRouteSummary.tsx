@@ -3,10 +3,12 @@ import { StatusBar } from '../components/StatusBar';
 import { Button } from '../components/Button';
 import { Pill } from '../components/Pill';
 import { useRoute } from '../state/RouteContext';
+import { PhotoCapture } from '../components/PhotoCapture';
 
 export function EndRouteSummary() {
   const nav = useNavigate();
   const { state, stops, route, dispatch, completedCount } = useRoute();
+  const odoEnd = state.photos.odometerEnd;
   const passengersOnBoard = state.stops.filter(
     (s, i) => stops[i].kind === 'pickup' && s.status === 'done'
   ).length;
@@ -142,6 +144,22 @@ export function EndRouteSummary() {
               </div>
             </div>
 
+            <div style={{ marginTop: 14 }}>
+              <span className="label">End-of-ride odometer</span>
+              <div style={{ marginTop: 8 }}>
+                <PhotoCapture
+                  label="Odometer · end of ride"
+                  hint="Required before route can be submitted."
+                  required
+                  photo={odoEnd}
+                  onCapture={dataUrl =>
+                    dispatch({ type: 'setPhoto', kind: 'odometerEnd', dataUrl })
+                  }
+                  onClear={() => dispatch({ type: 'clearPhoto', kind: 'odometerEnd' })}
+                />
+              </div>
+            </div>
+
             <Button
               variant="line"
               size="sm"
@@ -160,12 +178,13 @@ export function EndRouteSummary() {
             </Button>
             <Button
               style={{ marginTop: 10, marginBottom: 8 }}
+              disabled={!odoEnd}
               onClick={() => {
                 dispatch({ type: 'completeRoute' });
                 nav('/shift-complete');
               }}
             >
-              Submit route
+              {odoEnd ? 'Submit route' : 'Capture odometer to submit'}
             </Button>
           </div>
         </div>

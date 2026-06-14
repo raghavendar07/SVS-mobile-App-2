@@ -14,7 +14,7 @@ const stateFor = (status: StopStatus, isFinal: boolean): TimelineItemState =>
 
 export function MultiStopTimeline() {
   const nav = useNavigate();
-  const { state, stops, completedCount, percentComplete, currentStop, route } = useRoute();
+  const { state, stops, orderedIndices, completedCount, percentComplete, currentStop, route } = useRoute();
 
   const nextEta = currentStop?.scheduledAt ?? '—';
 
@@ -72,7 +72,8 @@ export function MultiStopTimeline() {
             </div>
 
             <Timeline>
-              {stops.map((stop, i) => {
+              {orderedIndices.map(i => {
+                const stop = stops[i];
                 const status = state.stops[i].status;
                 const isFinal = stop.kind === 'final';
                 const itemState = stateFor(status, isFinal);
@@ -142,14 +143,17 @@ function StopCard({
             </span>
             <div>
               <div style={{ fontSize: 14, fontWeight: 700 }}>{stop.address}</div>
-              <div style={{ fontSize: 12, color: 'var(--muted)' }}>
-                Drop-off · {stop.scheduledAt} AM
-              </div>
+              <div style={{ fontSize: 12, color: 'var(--muted)' }}>Drop-off</div>
             </div>
           </div>
-          <Pill tone={itemState === 'done' ? 'green' : 'grey'}>
-            {itemState === 'done' ? 'Done' : itemState === 'now' ? 'Now' : 'Final'}
-          </Pill>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 4 }}>
+            <span className="mono" style={{ fontSize: 12.5, fontWeight: 800, color: 'var(--ink-2)' }}>
+              {stop.scheduledAt}
+            </span>
+            <Pill tone={itemState === 'done' ? 'green' : 'grey'}>
+              {itemState === 'done' ? 'Done' : itemState === 'now' ? 'Now' : 'Final'}
+            </Pill>
+          </div>
         </div>
         {isNow && (
           <div className="row gap8" style={{ marginTop: 10 }}>
@@ -193,17 +197,14 @@ function StopCard({
             </div>
           </div>
         </div>
-        <Pill
-          tone={
-            itemState === 'done' ? 'green' : itemState === 'now' ? 'blue' : 'grey'
-          }
-        >
-          {itemState === 'done'
-            ? 'Done'
-            : itemState === 'now'
-            ? 'Now'
-            : 'Upcoming'}
-        </Pill>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 4 }}>
+          <span className="mono" style={{ fontSize: 12.5, fontWeight: 800, color: 'var(--ink-2)' }}>
+            {stop.scheduledAt}
+          </span>
+          <Pill tone={itemState === 'done' ? 'green' : itemState === 'now' ? 'blue' : 'grey'}>
+            {itemState === 'done' ? 'Done' : itemState === 'now' ? 'Now' : 'Upcoming'}
+          </Pill>
+        </div>
       </div>
       {isNow && (
         <div className="row gap8" style={{ marginTop: 10 }}>

@@ -25,6 +25,9 @@ export type StopState = {
 
 export type AdminOverride = { note: string; adminId: string; time: string };
 
+export type PhotoKind = 'driver' | 'odometerStart' | 'odometerEnd';
+export type CapturedPhoto = { dataUrl: string; time: string };
+
 type State = {
   shiftStarted: boolean;
   inspectionDone: boolean;
@@ -40,6 +43,7 @@ type State = {
   messages: ChatMessage[];
   dayNotes: DayNote[];
   adminOverride?: AdminOverride;
+  photos: Partial<Record<PhotoKind, CapturedPhoto>>;
   startedAt?: string;
   endedAt?: string;
 };
@@ -62,7 +66,8 @@ const initial: State = {
   occupancy: 0,
   incidents: [],
   messages: INITIAL_MESSAGES,
-  dayNotes: []
+  dayNotes: [],
+  photos: {}
 };
 
 type Action =
@@ -73,13 +78,15 @@ type Action =
   | { type: 'adminOverride'; note: string }
   | { type: 'startRoute' }
   | { type: 'boardPassenger'; stopId: string; passengerId?: string; notes?: string }
-  | { type: 'noShow'; stopId: string }
+  | { type: 'noShow'; stopId: string; reason: string; notes: string }
   | { type: 'dropoff'; stopId: string; notes?: string }
   | { type: 'missedDropoff'; stopId: string }
   | { type: 'completeRoute' }
   | { type: 'reportIncident'; category: IncidentCategory; notes: string }
   | { type: 'sendMessage'; text: string }
   | { type: 'addDayNote'; text: string; stage: DayNoteStage }
+  | { type: 'setPhoto'; kind: PhotoKind; dataUrl: string }
+  | { type: 'clearPhoto'; kind: PhotoKind }
   | { type: 'logout' };
 
 const nowHHMM = () => {
@@ -142,7 +149,8 @@ function reducer(state: State, action: Action): State {
       };
     }
     case 'noShow': {
-      const { stops, nextIndex } = advance(state.stops, action.stopId, 'missed', nowHHMM());
+      const note = `[${action.reason}] ${action.notes}`.trim();
+      const { stops, nextIndex } = advance(state.stops, action.stopId, 'missed', nowHHMM(), note);
       return { ...state, stops, currentStopIndex: nextIndex };
     }
     case 'dropoff': {
@@ -197,6 +205,19 @@ function reducer(state: State, action: Action): State {
           }
         ]
       };
+    case 'setPhoto':
+      return {
+        ...state,
+        photos: {
+          ...state.photos,
+          [action.kind]: { dataUrl: action.dataUrl, time: nowHHMM() }
+        }
+      };
+    case 'clearPhoto': {
+      const next = { ...state.photos };
+      delete next[action.kind];
+      return { ...state, photos: next };
+    }
     case 'logout':
       return initial;
     default:
@@ -215,6 +236,7 @@ type Ctx = {
   completedCount: number;
   percentComplete: number;
   currentStop: typeof STOPS[number] | undefined;
+  orderedIndices: number[];
   inspectionPercent: number;
   inspectionEvaluated: number;
   failedCriticalIds: string[];
@@ -233,6 +255,10 @@ export function RouteProvider({ children }: { children: ReactNode }) {
     const total = state.stops.length;
     const percentComplete = Math.round((completedCount / total) * 100);
     const currentStop = STOPS[state.currentStopIndex];
+    const orderedIndices = STOPS
+      .map((s, i) => ({ i, t: s.scheduledAt }))
+      .sort((a, b) => a.t.localeCompare(b.t))
+      .map(x => x.i);
     const evaluatedItems = Object.values(state.inspectionItems).filter(v => v !== 'pending');
     const inspectionEvaluated = evaluatedItems.length;
     const inspectionPercent = Math.round((inspectionEvaluated / CHECKLIST.length) * 100);
@@ -259,6 +285,7 @@ export function RouteProvider({ children }: { children: ReactNode }) {
       completedCount,
       percentComplete,
       currentStop,
+      orderedIndices,
       inspectionEvaluated,
       inspectionPercent,
       failedCriticalIds,

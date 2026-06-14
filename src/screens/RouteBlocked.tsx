@@ -161,18 +161,20 @@ export function RouteBlocked() {
                           {it.label}
                           {it.critical && (
                             <span
+                              aria-label="Critical item"
                               style={{
-                                marginLeft: 8,
-                                fontSize: 9.5,
-                                fontWeight: 800,
-                                letterSpacing: '.06em',
+                                marginLeft: 6,
                                 color: '#FCA5A5',
-                                background: 'rgba(255,255,255,.10)',
-                                padding: '2px 6px',
-                                borderRadius: 6
+                                display: 'inline-flex',
+                                verticalAlign: 'middle'
                               }}
                             >
-                              CRITICAL
+                              <svg width="13" height="13" viewBox="0 0 24 24">
+                                <path
+                                  d="m12 2 2.6 6.6 7 .6-5.3 4.6 1.7 6.9L12 17l-6 3.7 1.7-6.9L2.4 9.2l7-.6L12 2Z"
+                                  fill="currentColor"
+                                />
+                              </svg>
                             </span>
                           )}
                         </span>
